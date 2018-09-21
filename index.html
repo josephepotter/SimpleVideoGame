@@ -1,0 +1,134 @@
+<style>
+  body{
+    margin:0;
+  }
+  .heading{
+    background: #e5e5e5;
+    height: 10vh;
+  }
+  .gameBoard{
+    position: relative;
+    width: 100vw;
+    height: 90vh;
+    background: grey;
+  }
+
+  .ghost{
+    width: 0px;
+    height: 0px;
+    position: absolute;
+    border-radius: 50%;
+    opacity: 1;
+    transition: opacity 5s ease-in, height .3s,  width .3s, top 5s ease-in;
+  }
+  .good-ghost{
+    background: blue;
+  }
+
+  .bad-ghost{
+    background: red;
+  }
+  .modal-outer{
+    position:fixed;
+    top:0;
+    left:0;
+    height: 100vh;
+    width: 100vw;
+    background: #00000044
+  }
+  .modal{
+    border-radius: 5px;
+    padding: 20px;
+    text-align: center;
+    width:200px;
+    margin: auto;
+    margin-top: 100px;
+    background: #b5b5b5
+  }
+  p{
+    margin: 5px;
+  }
+</style>
+<script>
+
+  let ghostNum = 1
+  let score = 0;
+  let gameIsActive = false;
+
+  function newGhost(goodGhostClass){
+    let ghostClass = "ghost" + ghostNum;
+    let randomTop = Math.floor(Math.random() * 81);
+    let randomLeft = Math.floor(Math.random() * 101);
+    let gameBoard = document.querySelector(".gameBoard");
+    let template = document.createElement('div');
+    template.onclick = removeGhost;
+    template.className = "ghost " + ghostClass + " " + goodGhostClass
+    gameBoard.appendChild(template);
+    let ghost = document.querySelector("." + ghostClass);
+    ghost.style.top = randomTop > 40 ? "calc(" + randomTop + "vh - 40px)" : randomTop + "vh";
+    ghost.style.left = randomLeft > 50 ? "calc(" + randomLeft + "vw - 40px)" : randomLeft + "vw";
+    setTimeout(()=>{
+      ghost.style.top = -40 + 'px';
+      ghost.style.height = "40px";
+      ghost.style.width = "40px";
+      setTimeout(()=>{
+        if (document.querySelector("." + ghostClass)){
+          if(goodGhostClass === "bad-ghost"){
+            showModal();
+          }
+        }
+      },5000)
+    },20)
+    ghostNum++;
+  }
+  function removeGhost(event){
+    if (event.target.classList.contains("good-ghost")){
+      showModal();
+    } else {
+      event.target.remove();
+      score ++
+    }
+  }
+  function startGame(){
+    if(!gameIsActive){
+      score = 0;
+      gameIsActive = true;
+      ghostTimeouts = {
+        "good-ghost": 5000,
+        "bad-ghost": 2000
+      }
+      function makeGhost(goodGhostClass){
+        setTimeout(()=>{
+          if(gameIsActive){
+            ghostTimeouts[goodGhostClass] *= .95;
+            newGhost(goodGhostClass);
+            makeGhost(goodGhostClass);
+          }
+        }, ghostTimeouts[goodGhostClass])
+      }
+      makeGhost('good-ghost');
+      makeGhost('bad-ghost');
+    }
+  }
+  function showModal(){
+    if(gameIsActive){
+      gameIsActive = false;
+      let body = document.querySelector('body');
+      body.innerHTML += "<div class=\"modal-outer\"><div class=\"modal\"><p>You Lost.</p><p>Score: " + score + "</p><button onclick=\"closeModal()\">close</button></div></div>";
+      let gameBoard = document.querySelector(".gameBoard");
+      gameBoard.innerHTML = '';
+    }
+
+  }
+  function closeModal(){
+    let modal = document.querySelector(".modal-outer");
+    modal.remove();
+  }
+
+</script>
+<body>
+  <div class="heading">
+    <button onclick="startGame()">Start Game</button>
+  </div>
+  <div class = "gameBoard"></div>
+</body>
